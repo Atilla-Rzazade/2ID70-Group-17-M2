@@ -10,15 +10,16 @@ import scala.Tuple2;
 
 public class question1 {
     public static Tuple2<JavaRDD<String>, JavaRDD<String>> solution(SparkSession spark, JavaRDD<String> eventsRDD, JavaRDD<String> eventTypesRDD) {
-        int q11 = 0;
-        int q12 = 0;
-
-        System.out.println(eventsRDD.count());
+        int rowCountEvents = (int) eventsRDD.count();
+        int rowCountEventTypes = (int) eventTypesRDD.count();
         JavaRDD<String> cleanedEventsRDD = eventsRDD.filter(s -> s.matches("\\d+,\\d+,\\d+"));
-        System.out.println(cleanedEventsRDD.count());
-        JavaRDD<String> cleanedEventTypesRDD = eventTypesRDD;
-        int q13 = 0;
-        int q14 = 0;
+        JavaRDD<String> cleanedEventTypesRDD = eventTypesRDD.filter(s -> s.matches("\\d+,\\d+"));
+
+        int q11 = (int) cleanedEventsRDD.count();
+        int q12 = (int) cleanedEventTypesRDD.count();
+
+        int q13 = rowCountEvents - q11;
+        int q14 = rowCountEventTypes - q12;
 
         System.out.println(">> [q11: " + q11 + "]");
         System.out.println(">> [q12: " + q12 + "]");
