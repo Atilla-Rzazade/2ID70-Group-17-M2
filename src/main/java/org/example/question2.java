@@ -48,14 +48,14 @@ public class question2 {
 
         eventTypesDataset.createOrReplaceTempView("eventtypes");
         Dataset<Row> resultTypes = spark.sql(
+            "WITH mappedEvents(seriesid, timestamp, eventtypeid, id) AS (SELECT e.seriesid, e.timestamp, t.eventtypeid, e.id " +
+            "FROM events e JOIN eventtypes t ON t.eventid = e.eventid) " +
+
             "SELECT COUNT(*) " +
-            "FROM events e " +
-            "JOIN events p ON e.id = (p.id + 1) " +
-            "JOIN events n ON e.id = (n.id - 1) " + 
-            "JOIN eventtypes tp ON p.eventid = tp.eventid " + 
-            "JOIN eventtypes te ON e.eventid = te.eventid " + 
-            "JOIN eventtypes tn ON n.eventid = tn.eventid " +
-            "WHERE tp.eventtypeid = 2 AND te.eventtypeid = 11 AND tn.eventtypeid = 6"
+            "FROM mappedEvents e " +
+            "JOIN mappedEvents p ON e.id = (p.id + 1) " +
+            "JOIN mappedEvents n ON e.id = (n.id - 1) " +
+            "WHERE p.eventtypeid = 2 AND e.eventtypeid = 11 AND n.eventtypeid = 6"
         );
         
         //resultType.show();
@@ -64,13 +64,5 @@ public class question2 {
         
         System.out.println(">> [q21: " + q21 + "]");
         System.out.println(">> [q22: " + q22 + "]");
-
-        // List<Row> res = null;
-        // res = eventsDataset
-        //         .where(eventsDataset.col("seriesid").equalTo("109"))
-        //         .where(eventsDataset.col("timestamp").equalTo("145"))
-        //         .where(eventsDataset.col("eventid").equalTo("125"))
-        //         .collectAsList();
-        // System.out.println(res.size());
     }
 }
