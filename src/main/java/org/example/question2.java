@@ -23,8 +23,6 @@ public class question2 {
         }), eventsSchema);
         eventsDataset = eventsDataset.sort("seriesid", "timestamp");
         eventsDataset = eventsDataset.withColumn("id", monotonically_increasing_id());
-
-        eventsDataset.show();
         
         StructType eventTypesSchema = new StructType()
         .add("eventid", DataTypes.IntegerType)
@@ -44,7 +42,7 @@ public class question2 {
             "WHERE p.eventid = 109 AND e.eventid = 145 AND n.eventid = 125"
         );
 
-        resultEvents.show();
+        //resultEvents.show();
         Row resultRowEvent = resultEvents.first();
         long q21 = resultRowEvent.getAs(0);
 
@@ -54,11 +52,13 @@ public class question2 {
             "FROM events e " +
             "JOIN events p ON e.id = (p.id + 1) " +
             "JOIN events n ON e.id = (n.id - 1) " + 
-            "JOIN eventtypes t ON e.eventid = t.eventid " +
-            "WHERE p.eventtypeid = 2 AND e.eventtypeid = 11 AND n.eventtypeid = 6"
+            "JOIN eventtypes tp ON p.eventid = tp.eventid " + 
+            "JOIN eventtypes te ON e.eventid = te.eventid " + 
+            "JOIN eventtypes tn ON n.eventid = tn.eventid " +
+            "WHERE tp.eventtypeid = 2 AND te.eventtypeid = 11 AND tn.eventtypeid = 6"
         );
         
-        //resultTypes.show();
+        //resultType.show();
         Row resultRowType = resultTypes.first();
         long q22 = resultRowType.getAs(0);
         
