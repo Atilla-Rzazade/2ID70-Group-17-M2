@@ -21,8 +21,11 @@ public class question2 {
             String[] parts = row.split(",");
             return RowFactory.create(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
         }), eventsSchema);
+        eventsDataset = eventsDataset.sort("seriesid", "timestamp");
         eventsDataset = eventsDataset.withColumn("id", monotonically_increasing_id());
 
+        eventsDataset.show();
+        
         StructType eventTypesSchema = new StructType()
         .add("eventid", DataTypes.IntegerType)
         .add("eventtypeid", DataTypes.IntegerType);
@@ -31,29 +34,27 @@ public class question2 {
             String[] parts = row.split(",");
             return RowFactory.create(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]));
         }), eventTypesSchema);
-        eventTypesDataset = eventTypesDataset.withColumn("id", monotonically_increasing_id());
 
         eventsDataset.createOrReplaceTempView("events");
         Dataset<Row> resultEvents = spark.sql(
-            //"SELECT p.id, e.id, n.id " + 
-            //"SELECT * " + 
             "SELECT COUNT(*) " +
             "FROM events e " +
             "JOIN events p ON e.id = (p.id + 1) " +
-            "JOIN events n ON e.id = (n.id - 1) " +
+            "JOIN events n ON e.id = (n.id - 1) " + 
             "WHERE p.eventid = 109 AND e.eventid = 145 AND n.eventid = 125"
         );
 
-        //resultEvents.show();
+        resultEvents.show();
         Row resultRowEvent = resultEvents.first();
         long q21 = resultRowEvent.getAs(0);
 
         eventTypesDataset.createOrReplaceTempView("eventtypes");
         Dataset<Row> resultTypes = spark.sql(
             "SELECT COUNT(*) " +
-            "FROM eventtypes e " +
-            "JOIN eventtypes p ON e.id = (p.id + 1) " +
-            "JOIN eventtypes n ON e.id = (n.id - 1) " + 
+            "FROM events e " +
+            "JOIN events p ON e.id = (p.id + 1) " +
+            "JOIN events n ON e.id = (n.id - 1) " + 
+            "JOIN eventtypes t ON e.eventid = t.eventid " +
             "WHERE p.eventtypeid = 2 AND e.eventtypeid = 11 AND n.eventtypeid = 6"
         );
         
@@ -63,8 +64,6 @@ public class question2 {
         
         System.out.println(">> [q21: " + q21 + "]");
         System.out.println(">> [q22: " + q22 + "]");
-
-        //long q21 = 0;
 
         // List<Row> res = null;
         // res = eventsDataset
