@@ -9,10 +9,13 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import scala.Tuple2;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.Comparator;
@@ -51,6 +54,11 @@ public class question3_boris {
                 .filter(seqCount -> seqCount._2 >= 5)
                 .map(Tuple2::_1);
 
+        Set<String> eventSequences = new HashSet<>(RDDQ3.collect());
+        System.out.println(eventSequences.size());
+        List<String> cleanSequences = new ArrayList<>(eventSequences);
+        System.out.println(cleanSequences.size());
+        
         long q3 = RDDQ3.distinct().count();
 
         System.out.println(">> [q3: " + q3 + "]");
