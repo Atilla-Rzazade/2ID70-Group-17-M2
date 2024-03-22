@@ -30,8 +30,8 @@ public class Main {
 
         String eventsPath = (onServer) ? "/events.csv" : "./src/main/resources/smallDataset/events.csv";
         String eventTypesPath = (onServer) ? "/eventtypes.csv" : "./src/main/resources/smallDataset/eventtypes.csv";
-        JavaRDD<String> eventsRDD = spark.read().textFile(eventsPath).javaRDD();; // Todo: Load the data from the file at eventsPath
-        JavaRDD<String> eventTypesRDD = spark.read().textFile(eventTypesPath).javaRDD();; // Todo: Load the data from the file at eventTypesPath
+        JavaRDD<String> eventsRDD = spark.read().textFile(eventsPath).javaRDD();
+        JavaRDD<String> eventTypesRDD = spark.read().textFile(eventTypesPath).javaRDD();
 
         Tuple2<JavaRDD<String>, JavaRDD<String>> cleaned = question1.solution(spark, eventsRDD, eventTypesRDD);
         JavaRDD<String> df1 = cleaned._1();
