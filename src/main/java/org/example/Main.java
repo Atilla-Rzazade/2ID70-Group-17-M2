@@ -37,8 +37,8 @@ public class Main {
         JavaRDD<String> df1 = cleaned._1();
         JavaRDD<String> df2 = cleaned._2();
         //question2.solution(spark, df1, df2);
-        question3_boris.solution(spark, df1);
+        question3.solution(spark, df1);
         //question4.solution(spark, df1, df2);
-        question4_test.solution(spark, df1, df2);
+        //question4_test.solution(spark, df1, df2);
     }
 }
