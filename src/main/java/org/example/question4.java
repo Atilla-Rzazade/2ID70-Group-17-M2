@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -18,59 +19,64 @@ public class question4 {
 
     public static void solution(SparkSession spark, JavaRDD<String> eventsRDD, JavaRDD<String> eventsTypesRDD) {
 
-        // Define the PairFunctions
-        PairFunction<String, Integer, Tuple2<Integer, Integer>> eventsPairFunction = line -> {
-            String[] parts = line.split(",");
-            return new Tuple2<>(Integer.parseInt(parts[2]),
-                    new Tuple2<>(Integer.parseInt(parts[0]), Integer.parseInt(parts[1])));
-        };
-
-        PairFunction<String, Integer, Integer> eventTypesPairFunction = line -> {
-            String[] parts = line.split(",");
-            return new Tuple2<>(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]));
-        };
-
-        // Generate JavaPairRDDs
-        JavaPairRDD<Integer, Tuple2<Integer, Integer>> events = eventsRDD.mapToPair(eventsPairFunction);
-        JavaPairRDD<Integer, Integer> eventTypes = eventsTypesRDD.mapToPair(eventTypesPairFunction);
-
-        // Join the two JavaPairRDDs
-        JavaPairRDD<Integer, Tuple2<Tuple2<Integer, Integer>, Integer>> joined = events.join(eventTypes);
-
-        // Group by seriesid
-        JavaPairRDD<Object, Iterable<Tuple2<Integer, Tuple2<Tuple2<Integer, Integer>, Integer>>>> grouped = joined
-                .groupBy(t -> t._2._1._1);
-
+        JavaPairRDD typeMap = eventsTypesRDD
+            .mapToPair(s -> {
+                String[] parts = s.split(",", 2);
+                return new Tuple2<>(parts[0], parts[1]);
+            });
         
-        FlatMapFunction<Tuple2<Object, Iterable<Tuple2<Integer, Tuple2<Tuple2<Integer, Integer>, Integer>>>>, List<Integer>> generateSequences = new FlatMapFunction<Tuple2<Object, Iterable<Tuple2<Integer, Tuple2<Tuple2<Integer, Integer>, Integer>>>>, List<Integer>>() {
-            @Override
-            public Iterator<List<Integer>> call(
-                    Tuple2<Object, Iterable<Tuple2<Integer, Tuple2<Tuple2<Integer, Integer>, Integer>>>> t) {
-                        List<Tuple2<Tuple2<Integer, Integer>, Integer>> eventsList = new ArrayList<>();
-                        t._2.forEach(tuple -> eventsList.add(tuple._2)); // Extract the second element of the tuple
-                        eventsList.sort(Comparator.comparing(e -> e._1._2)); // Sort by timestamp
-                        List<List<Integer>> sequences = new ArrayList<>();
-                        for (int i = 0; i <= eventsList.size() - 5; i++) {
-                            List<Integer> sequence = new ArrayList<>();
-                            for (int j = i; j < i + 5; j++) {
-                                sequence.add(eventsList.get(j)._2); // Add eventtypeid
-                            }
-                            sequences.add(sequence);
-                        }
-                        return sequences.iterator();
-                    }
-        };
+        Map<String, String> eventMap = typeMap.collectAsMap();
 
-        // Generate sequences
-        JavaRDD<List<Integer>> sequences = grouped.flatMap(generateSequences);
+        JavaPairRDD<String, ArrayList<Tuple2<Integer, String>>> events = eventsRDD
+            .mapToPair(s -> {
+                String[] parts = s.split(",", 3);
+                String key = parts[0];
+                String type = eventMap.get(parts[2]);
+                ArrayList<Tuple2<Integer, String>> list = new ArrayList<>(Arrays.asList(new Tuple2<Integer, String>(Integer.parseInt(parts[1]), type)));
+                return new Tuple2<>(key, list);
+            });
 
-        // Count occurrences
-        JavaPairRDD<List<Integer>, Integer> counted = sequences.mapToPair(s -> new Tuple2<>(s, 1))
-                .reduceByKey(Integer::sum);
+        JavaPairRDD<String, ArrayList<Tuple2<Integer, String>>> eventList = events
+            .reduceByKey((list1, list2)-> {
+                list1.addAll(list2);
+                return list1;
+            });
 
-        // Filter λ-frequent sequences
-        JavaPairRDD<List<Integer>, Integer> frequent = counted.filter(t -> t._2 >= 5);
-        long q4 = frequent.keys().distinct().count();
+        JavaPairRDD<String, ArrayList<Tuple2<Integer, String>>> sortedEvents = eventList
+            .mapValues(list -> {
+                list.sort(Comparator.comparing(Tuple2::_1));
+                return list;
+            });
+
+        JavaPairRDD<String, ArrayList<String>> sequences = sortedEvents
+            .mapValues(list -> {
+                ArrayList<String> seqs = new ArrayList<>();
+                for (int i = 0; i < list.size() - 4; i++) {
+                    String seq = list.get(i)._2 + "," 
+                            + list.get(i + 1)._2 + ","
+                            + list.get(i + 2)._2 + ","
+                            + list.get(i + 3)._2 + ","
+                            + list.get(i + 4)._2;
+                    seqs.add(seq);
+                }
+                return seqs;
+            });
+
+        JavaPairRDD<String, String> flattenedSequences = sequences
+            .flatMapValues(list -> {
+                return list.iterator();
+            });
+
+        JavaPairRDD<Tuple2<String, String>, Integer> sequenceCounts = flattenedSequences
+            .mapToPair(sequence -> new Tuple2<>(sequence, 1))
+            .reduceByKey((count1, count2) -> count1 + count2);
+
+        JavaRDD<String> RDDQ3 = sequenceCounts
+            .filter(sequence -> sequence._2() >= 5)
+            .map(sequence -> sequence._1._2);
+        
+        long q4 = RDDQ3.distinct().count();
+
         System.out.println(">> [q4: " + q4 + "]");
     }
 }

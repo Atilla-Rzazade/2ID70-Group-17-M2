@@ -64,6 +64,7 @@ public class question3 {
             .filter(sequence -> sequence._2() >= 5)
             .map(sequence -> sequence._1._2);
         
+
         long q3 = RDDQ3.distinct().count();
 
         System.out.println(">> [q3: " + q3 + "]");
