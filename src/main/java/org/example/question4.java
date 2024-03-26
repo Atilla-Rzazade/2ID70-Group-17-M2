@@ -71,11 +71,11 @@ public class question4 {
             .mapToPair(sequence -> new Tuple2<>(sequence, 1))
             .reduceByKey((count1, count2) -> count1 + count2);
 
-        JavaRDD<String> RDDQ3 = sequenceCounts
+        JavaRDD<String> RDDQ4 = sequenceCounts
             .filter(sequence -> sequence._2() >= 5)
             .map(sequence -> sequence._1._2);
         
-        long q4 = RDDQ3.distinct().count();
+        long q4 = RDDQ4.distinct().count();
 
         System.out.println(">> [q4: " + q4 + "]");
     }
