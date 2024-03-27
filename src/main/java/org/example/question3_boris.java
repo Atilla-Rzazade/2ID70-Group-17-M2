@@ -20,15 +20,14 @@ public class question3_boris {
     public static void solution(SparkSession spark, JavaRDD<String> eventsRDD) {
         JavaSparkContext sc = new JavaSparkContext(spark.sparkContext());
 
-        JavaPairRDD<String, ArrayList<String>> events = eventsRDD
+        JavaPairRDD<Tuple2<String, Integer>, ArrayList<String>> events = eventsRDD
             .flatMapToPair(line -> {
                 String[] parts = line.split(",", 3);
                 
-                List<Tuple2<String, ArrayList<String>>> result = new ArrayList<>();
+                List<Tuple2<Tuple2<String, Integer>, ArrayList<String>>> result = new ArrayList<>();
                 for (int i=0;i<3;i++) {
-                    String seriesId = parts[0];
                     Integer timestamp = Integer.parseInt(parts[1]) + i;
-                    String key = seriesId + "," + timestamp;
+                    Tuple2<String, Integer> key = new Tuple2<>(parts[0], timestamp);
 
                     ArrayList<String> list = new ArrayList<String>(Arrays.asList(parts[2]));
                     result.add(new Tuple2<>(key, list));
@@ -37,29 +36,26 @@ public class question3_boris {
                 return result.iterator();
             });
         
-        JavaPairRDD<String, ArrayList<String>> reducedEvents = events
+        JavaPairRDD<Tuple2<String, Integer>, ArrayList<String>> reducedEvents = events
             .reduceByKey((list1, list2) -> {
                 list1.addAll(list2);
                 return list1;
             });
 
-        JavaPairRDD<String, ArrayList<String>> filteredEvents = reducedEvents
+        JavaPairRDD<Tuple2<String, Integer>, ArrayList<String>> filteredEvents = reducedEvents
             .filter(line -> {
                 return line._2().size() == 3;
             });
 
-
-        JavaPairRDD<String, Integer> sequenceCounts = filteredEvents
+        JavaPairRDD<Tuple2<String, ArrayList<String>>, Integer> sequenceCounts = filteredEvents
             .mapToPair(line -> {
-                String key = line._1.split(",")[0];
-                for (String event : line._2) {
-                    key = key + event;
-                }
+                String seriesId = line._1._1;
+                Tuple2<String, ArrayList<String>> key = new Tuple2<>(seriesId, line._2);
                 return new Tuple2<>(key, 1);
             })
             .reduceByKey((count1, count2) -> count1 + count2);
 
-        JavaRDD<String> RDDQ3 = sequenceCounts
+        JavaRDD<Tuple2<String, ArrayList<String>>> RDDQ3 = sequenceCounts
             .filter(sequence -> sequence._2() >= 5)
             .map(sequence -> sequence._1);
 
