@@ -43,9 +43,7 @@ public class question3_boris {
             });
 
         JavaPairRDD<Tuple2<String, Integer>, ArrayList<String>> filteredEvents = reducedEvents
-            .filter(line -> {
-                return line._2().size() == 3;
-            });
+            .filter(line -> line._2().size() == 3);
 
         JavaPairRDD<Tuple2<String, ArrayList<String>>, Integer> sequenceCounts = filteredEvents
             .mapToPair(line -> {
@@ -58,6 +56,11 @@ public class question3_boris {
         JavaRDD<Tuple2<String, ArrayList<String>>> RDDQ3 = sequenceCounts
             .filter(sequence -> sequence._2() >= 5)
             .map(sequence -> sequence._1);
+
+        // List<Tuple2<String, ArrayList<String>>> temp = RDDQ3.collect();
+        // for(int i=0;i<temp.size();i++) {
+        //     System.out.println(temp.get(i));
+        // }
 
         long q3 = RDDQ3.distinct().count();
 
