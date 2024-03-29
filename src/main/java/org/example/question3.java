@@ -44,6 +44,9 @@ public class question3 {
             .mapValues(list -> {
                 ArrayList<String> seqs = new ArrayList<>();
                 for (int i = 0; i < list.size() - 2; i++) {
+                    // if (list.get(i)._1 != list.get(i+1)._1 - 1 && list.get(i+1)._1 != list.get(i+2)._1 - 1) {
+                    //     continue;
+                    // }
                     String seq = list.get(i)._2 + "," + list.get(i + 1)._2 + ","
                             + list.get(i + 2)._2;
                     seqs.add(seq);
