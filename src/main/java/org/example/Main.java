@@ -17,7 +17,7 @@ public class Main {
         Logger.getLogger("akka").setLevel(Level.OFF);
         Logger.getRootLogger().setLevel(Level.OFF);
 
-        boolean onServer = false; // TODO: Set this to true if and only if building a JAR to run on the server
+        boolean onServer = true; // TODO: Set this to true if and only if building a JAR to run on the server
 
         SparkConf conf = new SparkConf()
                 .setAppName(Main.class.getName());
